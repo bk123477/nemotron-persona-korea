@@ -76,6 +76,8 @@ def main() -> None:
                         help="나이 하한 예) 60")
     parser.add_argument("--filter-age-lte", type=int, default=None,
                         help="나이 상한 예) 80")
+    parser.add_argument("--filter-occupation", type=str, default=None,
+                        help="직업 키워드 필터 (부분 일치) 예) 전문 / 의사 / 교사 / 엔지니어")
     parser.add_argument("--answer", action="store_true",
                         help="검색 후 OpenRouter LLM으로 답변 생성")
     parser.add_argument("--llm-model", type=str, default=None,
@@ -123,6 +125,8 @@ def main() -> None:
         filter_clauses.append({"age": {"$gte": args.filter_age_gte}})
     if args.filter_age_lte is not None:
         filter_clauses.append({"age": {"$lte": args.filter_age_lte}})
+    if args.filter_occupation:
+        filter_clauses.append({"occupation": {"$contains": args.filter_occupation}})
     if len(filter_clauses) == 1:
         where = filter_clauses[0]
     elif len(filter_clauses) > 1:
