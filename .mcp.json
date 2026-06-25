@@ -1,0 +1,9 @@
+{
+  "mcpServers": {
+    "persona-korea": {
+      "command": "/home/minkih/nemotron-persona-korea/.venv/bin/python3",
+      "args": ["-m", "labs.mcp_lab.persona_server"],
+      "cwd": "/home/minkih/nemotron-persona-korea"
+    }
+  }
+}
