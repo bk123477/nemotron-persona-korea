@@ -23,7 +23,7 @@ import json
 import logging
 
 from .config import RAGConfig, setup_ssl, suppress_hf_warnings
-from .llm.openrouter import OpenRouterLLM
+from .llm.nim import NIMLM
 
 setup_ssl()
 suppress_hf_warnings()
@@ -79,9 +79,9 @@ def main() -> None:
     parser.add_argument("--filter-occupation", type=str, default=None,
                         help="직업 키워드 필터 (부분 일치) 예) 전문 / 의사 / 교사 / 엔지니어")
     parser.add_argument("--answer", action="store_true",
-                        help="검색 후 OpenRouter LLM으로 답변 생성")
+                        help="검색 후 NVIDIA NIM LLM으로 답변 생성")
     parser.add_argument("--llm-model", type=str, default=None,
-                        help="LLM 모델 오버라이드 예) nvidia/nemotron-3-super-120b-a12b:free")
+                        help="LLM 모델 오버라이드 예) nvidia/nemotron-3-super-120b-a12b")
     parser.add_argument("--no-stream", action="store_true",
                         help="LLM 스트리밍 비활성화")
     args = parser.parse_args()
@@ -93,10 +93,10 @@ def main() -> None:
     pipeline = HybridRAGPipeline(config)
 
     # LLM 초기화 (--answer 플래그 시)
-    llm: OpenRouterLLM | None = None
+    llm: NIMLM | None = None
     if args.answer:
         try:
-            llm = OpenRouterLLM(config)
+            llm = NIMLM(config)
         except ValueError as e:
             print(f"[LLM 오류] {e}")
             return

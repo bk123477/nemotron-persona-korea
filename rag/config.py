@@ -121,12 +121,17 @@ class RAGConfig:
     cohere_rerank_model: str = "rerank-multilingual-v3.0"
     final_top_k: int = 10
 
-    # ── OpenRouter LLM ────────────────────────────────────────
-    openrouter_api_key: str = field(default_factory=lambda: os.getenv("OPENROUTER_API_KEY", ""))
-    # 무료 모델 기본값: Nemotron-Personas-Korea 데이터셋 생성에 사용된 동일 모델
-    llm_model: str = "google/gemma-4-31b-it:free"
+    # ── NVIDIA NIM LLM ────────────────────────────────────────
+    nvidia_api_key: str = field(default_factory=lambda: os.getenv("NVIDIA_API_KEY", ""))
+    nim_base_url: str = "https://integrate.api.nvidia.com/v1"
+    llm_model: str = "nvidia/nemotron-3-super-120b-a12b"
     llm_max_tokens: int = 1024
     llm_temperature: float = 0.3
+
+    # 하위 호환성: openrouter_api_key는 nvidia_api_key 우선 사용
+    openrouter_api_key: str = field(
+        default_factory=lambda: os.getenv("NVIDIA_API_KEY") or os.getenv("OPENROUTER_API_KEY", "")
+    )
 
     # ── 속성 ─────────────────────────────────────────────────
     @property

@@ -45,9 +45,14 @@ EMBEDDING_MODEL_CACHE = (
 
 CHROMA_COLLECTION = "personas"
 
-# ── LLM (OpenRouter) ────────────────────────────────────────────────
-OPENROUTER_API_KEY: str = os.getenv("OPENROUTER_API_KEY", "")
-OPENROUTER_BASE_URL = "https://openrouter.ai/api/v1"
-LLM_MODEL = "google/gemma-4-31b-it:free"
+# ── NVIDIA NIM LLM ──────────────────────────────────────────────────
+NVIDIA_API_KEY: str = os.getenv("NVIDIA_API_KEY", "")
+NIM_BASE_URL = "https://integrate.api.nvidia.com/v1"
+NIM_MODEL = "nvidia/nemotron-3-super-120b-a12b"
+
+# 하위 호환성 별칭 — 모든 labs 모듈이 OpenRouter 변수명으로 NIM을 참조
+OPENROUTER_API_KEY: str = NVIDIA_API_KEY or os.getenv("OPENROUTER_API_KEY", "")
+OPENROUTER_BASE_URL = NIM_BASE_URL
+LLM_MODEL = NIM_MODEL
 
 _PROXY = os.getenv("HTTPS_PROXY") or os.getenv("https_proxy") or "http://150.2.127.249:9090"
