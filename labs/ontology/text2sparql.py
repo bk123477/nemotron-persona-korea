@@ -63,11 +63,15 @@ _SYSTEM_PROMPT = """당신은 RDF/SPARQL 전문가입니다.
   nemo:hasAgeGroup              → nemo:AgeGroup
   nemo:hasBachelorsField (xsd:string) — 전공 계열
 
+## 시도명 예시 (nemo:hasProvinceName 값)
+  "서울", "경기", "부산", "대구", "인천", "광주", "대전", "울산", "세종",
+  "강원", "충청북", "충청남", "전북", "전라남", "경상북", "경상남", "제주"
+
 ## 작성 규칙
 1. SPARQL SELECT 쿼리만 출력하세요 (설명 없이, 코드 블록 없이)
 2. INSERT / DELETE / UPDATE 금지
 3. 집계 시 GROUP BY + ORDER BY DESC(?count) 사용
-4. 한국어 리터럴 필터: FILTER(LANG(?var) = "ko")
+4. 시도 필터 예: FILTER(STR(?provName) = "서울")
 5. LIMIT 20 이하로 제한
 6. 잘 모르면 가장 단순한 질의를 생성하세요"""
 
@@ -87,7 +91,7 @@ def natural_to_sparql(question: str) -> str:
         openai_api_base=OPENROUTER_BASE_URL,
         http_client=httpx.Client(proxy=_PROXY, verify=False),
         temperature=0.0,
-        max_tokens=800,
+        max_tokens=1500,
     )
 
     response = llm.invoke([

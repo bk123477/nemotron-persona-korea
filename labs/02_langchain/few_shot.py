@@ -109,9 +109,10 @@ def build_few_shot_chain(n_shots: int = 3):
             ("system",
              "당신은 한국 사회의 다양한 인물 페르소나를 자연스럽고 구체적으로 서술하는 작가입니다.\n"
              "아래 예시들을 참고해 주어진 인구통계 조건에 맞는 새로운 페르소나를 200자 내외로 작성하세요.\n"
-             "실제 인물을 묘사하듯 생생하고 구체적인 한국어 문장으로 써주세요."),
+             "실제 인물을 묘사하듯 생생하고 구체적인 한국어 문장으로 써주세요.\n"
+             "중요: 추론 과정이나 설명 없이 페르소나 서술문만 바로 출력하세요."),
             few_shot_prompt,
-            ("human", "다음 인구통계 조건: {target_demographic}"),
+            ("human", "다음 인구통계 조건에 맞는 페르소나를 한국어로 바로 서술하세요: {target_demographic}"),
         ])
 
         chain = final_prompt | llm | StrOutputParser()

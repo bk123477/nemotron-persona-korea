@@ -57,11 +57,26 @@ class PersonaTraits(BaseModel):
 
 # ── LLM + 체인 ──────────────────────────────────────────────────────
 
+def _extract_json(text: str) -> str:
+    """LLM 응답에서 JSON 객체만 추출한다 (추론 텍스트 제거)."""
+    import re
+    # 마지막 완전한 { ... } 블록 추출
+    matches = list(re.finditer(r'\{[^{}]*(?:\{[^{}]*\}[^{}]*)?\}', text, re.DOTALL))
+    if matches:
+        return matches[-1].group()
+    # 코드 블록 내 JSON
+    m = re.search(r'```(?:json)?\s*(\{.*?\})\s*```', text, re.DOTALL)
+    if m:
+        return m.group(1)
+    return text
+
+
 def build_extractor_chain():
     """persona text → PersonaTraits LCEL 체인."""
     if not OPENROUTER_API_KEY:
         raise ValueError("OPENROUTER_API_KEY가 없습니다.")
     import httpx
+    from langchain_core.runnables import RunnableLambda
 
     llm = ChatOpenAI(
         model=LLM_MODEL,
@@ -69,7 +84,7 @@ def build_extractor_chain():
         openai_api_base=OPENROUTER_BASE_URL,
         http_client=httpx.Client(proxy=_PROXY, verify=False),
         temperature=0.0,
-        max_tokens=512,
+        max_tokens=800,
     )
 
     parser = PydanticOutputParser(pydantic_object=PersonaTraits)
@@ -77,12 +92,35 @@ def build_extractor_chain():
     prompt = ChatPromptTemplate.from_messages([
         ("system",
          "당신은 한국어 페르소나 텍스트 분석 전문가입니다.\n"
-         "주어진 페르소나 텍스트를 읽고 아래 JSON 형식으로 핵심 속성을 추출하세요.\n\n"
-         "{format_instructions}"),
-        ("human", "다음 페르소나 텍스트를 분석하세요:\n\n{persona_text}"),
-    ]).partial(format_instructions=parser.get_format_instructions())
+         "페르소나 텍스트를 분석해 아래 JSON 형식으로만 응답하세요.\n"
+         "절대로 설명이나 추론 과정을 출력하지 말고, JSON만 출력하세요.\n\n"
+         "출력 형식 예시:\n"
+         "{{\n"
+         '  "name_or_alias": "이름 미상",\n'
+         '  "age_group": "40대",\n'
+         '  "occupation_summary": "교사",\n'
+         '  "personality_keywords": ["성실함", "사교적", "책임감"],\n'
+         '  "top_hobby": "독서",\n'
+         '  "travel_style": "국내 여행 선호",\n'
+         '  "life_goal": "가족과 행복한 노후",\n'
+         '  "notable_fact": "20년 경력 교사"\n'
+         "}}"),
+        ("human",
+         "다음 페르소나 텍스트를 분석해 JSON으로 응답하세요:\n\n{persona_text}"),
+    ])
 
-    return prompt | llm | parser
+    # LLM 응답에서 JSON 추출 후 Pydantic 파싱
+    def _parse(response) -> PersonaTraits:
+        text = response.content if hasattr(response, "content") else str(response)
+        json_str = _extract_json(text)
+        import json
+        try:
+            data = json.loads(json_str)
+        except Exception:
+            data = json.loads(text)
+        return PersonaTraits(**data)
+
+    return prompt | llm | RunnableLambda(_parse)
 
 
 # ── 유틸 ────────────────────────────────────────────────────────────
